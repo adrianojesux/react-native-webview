@@ -683,6 +683,9 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     view.setWebViewClient(new RNCWebViewClient());
   }
 
+
+
+
   @Override
   public Map getExportedCustomDirectEventTypeConstants() {
     Map export = super.getExportedCustomDirectEventTypeConstants();
@@ -908,6 +911,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     protected RNCWebView.ProgressChangedFilter progressChangedFilter = null;
     protected @Nullable String ignoreErrFailedForThisURL = null;
     protected @Nullable BasicAuthCredential basicAuthCredential = null;
+    protected  Map<String, String> headers = null;
 
     public void setIgnoreErrFailedForThisURL(@Nullable String url) {
       ignoreErrFailedForThisURL = url;
@@ -957,6 +961,13 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
         final WritableMap event = createWebViewEvent(view, url);
         event.putInt("lockIdentifier", lockIdentifier);
+        if(this.headers != null) {
+          WritableMap headerMap = new WritableNativeMap();
+          for (Map.Entry<String, String> entry: this.headers.entrySet()) {
+            headerMap.putString(entry.getKey(), entry.getValue());
+          }
+          event.putMap("requestHeaders", headerMap);
+        }
         rncWebView.sendDirectMessage("onShouldStartLoadWithRequest", event);
 
         try {
@@ -994,10 +1005,13 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       }
     }
 
+
+
     @TargetApi(Build.VERSION_CODES.N)
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
       final String url = request.getUrl().toString();
+      this.headers = request.getRequestHeaders();
       return this.shouldOverrideUrlLoading(view, url);
     }
 

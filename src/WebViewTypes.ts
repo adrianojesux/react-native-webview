@@ -93,6 +93,7 @@ export interface WebViewNativeEvent {
   canGoBack: boolean;
   canGoForward: boolean;
   lockIdentifier: number;
+  requestHeaders?: Record<string, string>;
 }
 
 export interface WebViewNativeProgressEvent extends WebViewNativeEvent {

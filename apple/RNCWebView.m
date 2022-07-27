@@ -1143,11 +1143,31 @@ RCTAutoInsetsProtocol>
   
   if (_onShouldStartLoadWithRequest) {
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+    
+    NSDictionary<NSString *, NSString *> *headers = request.allHTTPHeaderFields;
+    NSMutableArray *cookies = [[NSMutableArray alloc] init];
+    
+    if (@available(iOS 11, *)) {
+      [webView.configuration.websiteDataStore.httpCookieStore getAllCookies:^(NSArray<NSHTTPCookie *> *cookieArray) {
+        [cookies addObjectsFromArray:cookieArray];
+      }];
+    } else {
+      NSString *cookieScript = @"document.cookie;";
+      [self.webView evaluateJavaScript:cookieScript completionHandler:^(id result, NSError *error) {
+        if(result != nil) {
+          [cookies addObjectsFromArray:[result componentsSeparatedByString:@"; "] ];
+        }
+       
+      }];
+    }
+    
     [event addEntriesFromDictionary: @{
       @"url": (request.URL).absoluteString,
       @"mainDocumentURL": (request.mainDocumentURL).absoluteString,
       @"navigationType": navigationTypes[@(navigationType)],
-      @"isTopFrame": @(isTopFrame)
+      @"isTopFrame": @(isTopFrame),
+      @"requestHeaders": request.allHTTPHeaderFields,
+      @"cookies": cookies
     }];
     if (![self.delegate webView:self
       shouldStartLoadForRequest:event
